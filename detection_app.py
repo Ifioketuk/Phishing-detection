@@ -365,7 +365,6 @@ if st.button("Analyze Site"):
                 ),
                 showlegend=False,
                 title="🔎 Key Numerical Feature Radar Plot",
-                staticPlot=True  # disables interactivity
             )
             
             st.plotly_chart(fig_radar, use_container_width=True, config={"staticPlot": True})            
