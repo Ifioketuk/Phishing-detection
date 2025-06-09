@@ -368,8 +368,7 @@ if st.button("Analyze Site"):
                 staticPlot=True  # disables interactivity
             )
             
-            st.plotly_chart(fig_radar, use_container_width=True)
-            
+            st.plotly_chart(fig_radar, use_container_width=True, config={"staticPlot": True})            
             # Remove boolean and radar features from the main feature set
             feature_plot_df = feature_df.drop(columns=bool_features + radar_features)
             
@@ -388,9 +387,7 @@ if st.button("Analyze Site"):
                 title="Feature Importance Snapshot"
             )
             
-            fig_bar.update_layout(staticPlot=True)
-            
-            st.plotly_chart(fig_bar, use_container_width=True)
+            st.plotly_chart(fig_bar, use_container_width=True, config={"staticPlot": True})
             # Display raw feature_df
             st.markdown("### 🧾 Raw Feature Table")
             st.dataframe(feature_df)
