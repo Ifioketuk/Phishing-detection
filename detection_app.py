@@ -363,7 +363,7 @@ if st.button("Analyze Site"):
                 showlegend=False,
                 title="🔎 Key Numerical Feature Radar Plot"
             )
-
+            fig.update_layout(staticPlot=True)
             st.plotly_chart(fig, use_container_width=True)
 
 
@@ -383,6 +383,8 @@ if st.button("Analyze Site"):
                 color_continuous_scale="blues",
                 title="Feature Importance Snapshot"
             )
+            fig.update_layout(staticPlot=True)
+
             st.plotly_chart(fig, use_container_width=True)
             # Display raw feature_df
             st.markdown("### 🧾 Raw Feature Table")
