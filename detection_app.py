@@ -339,21 +339,24 @@ if st.button("Analyze Site"):
 
             st.subheader("🔍 Extracted Numerical Feature Breakdown")
 
+            # Define the radar plot features
             radar_features = ['URLCharProb', 'CharContinuationRate', 'SpacialCharRatioInURL', 'TLD_encoded']
-
-            values = feature_df[radar_features].iloc[0].tolist()
-
-            fig = go.Figure()
-
-            fig.add_trace(go.Scatterpolar(
-                r=values,
+            
+            # Extract the values for the radar plot
+            radar_values = feature_df[radar_features].iloc[0].tolist()
+            
+            # Create a static radar chart using Plotly
+            fig_radar = go.Figure()
+            
+            fig_radar.add_trace(go.Scatterpolar(
+                r=radar_values,
                 theta=radar_features,
                 fill='toself',
                 name='Feature Values',
                 marker=dict(color='mediumseagreen')
             ))
-
-            fig.update_layout(
+            
+            fig_radar.update_layout(
                 polar=dict(
                     radialaxis=dict(
                         visible=True,
@@ -361,21 +364,22 @@ if st.button("Analyze Site"):
                     )
                 ),
                 showlegend=False,
-                title="🔎 Key Numerical Feature Radar Plot"
+                title="🔎 Key Numerical Feature Radar Plot",
+                staticPlot=True  # disables interactivity
             )
-            fig.update_layout(staticPlot=True)
-            st.plotly_chart(fig, use_container_width=True)
-
-
-            feature_plot_df = feature_df.drop(labels=bool_features + radar_features, axis=1)
-
-            # Reshape the DataFrame for Plotly bar plot
+            
+            st.plotly_chart(fig_radar, use_container_width=True)
+            
+            # Remove boolean and radar features from the main feature set
+            feature_plot_df = feature_df.drop(columns=bool_features + radar_features)
+            
+            # Reshape for bar plotting
             feature_plot_df = feature_plot_df.T.reset_index()
             feature_plot_df.columns = ["Feature", "Value"]
-
-            # Plot using Plotly
+            
+            # Create static bar chart with Plotly
             st.subheader("📊 Feature Importance Snapshot")
-            fig = px.bar(
+            fig_bar = px.bar(
                 feature_plot_df,
                 x="Feature",
                 y="Value",
@@ -383,9 +387,10 @@ if st.button("Analyze Site"):
                 color_continuous_scale="blues",
                 title="Feature Importance Snapshot"
             )
-            fig.update_layout(staticPlot=True)
-
-            st.plotly_chart(fig, use_container_width=True)
+            
+            fig_bar.update_layout(staticPlot=True)
+            
+            st.plotly_chart(fig_bar, use_container_width=True)
             # Display raw feature_df
             st.markdown("### 🧾 Raw Feature Table")
             st.dataframe(feature_df)
