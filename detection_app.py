@@ -218,22 +218,42 @@ def encode_tld(url):
 
 #load overall feature extraction pipline function to accept urls
 def extract_features(url):
-    """Complete feature extraction pipeline for a single URL."""
+    """Robust phishing feature extraction that handles network failures on Streamlit Cloud."""
     html = fetch_page(url)
     page_title = ''
     domain_title = ''
+
     if html:
-        soup = BeautifulSoup(html, 'html.parser')
-        page_title = soup.title.string if soup.title else ''
-        domain_title_tag = soup.find('title')
-        domain_title = domain_title_tag.string if domain_title_tag else ''
+        try:
+            soup = BeautifulSoup(html, 'html.parser')
+            page_title = soup.title.string.strip() if soup.title and soup.title.string else ''
+            domain_title_tag = soup.find('title')
+            domain_title = domain_title_tag.string.strip() if domain_title_tag and domain_title_tag.string else ''
+        except Exception as e:
+            print(f"⚠️ HTML parsing failed: {e}")
+    else:
+        print("⚠️ HTML is None, falling back to URL-only features")
+
+    # Lexical features are always safe (URL-based)
     lexical = extract_lexical_features(url, domain_title, page_title)
+
+    # Structural features from HTML (or fallback to all 0s)
     structural = extract_structural_features(html) if html else {
-        'HasSubmitButton':0, 'HasHiddenFields':0, 'HasFavicon':0,
-        'IsResponsive':0, 'HasDescription':0, 'HasCopyrightInfo':0
+        'HasSubmitButton': 0,
+        'HasHiddenFields': 0,
+        'HasFavicon': 0,
+        'IsResponsive': 0,
+        'HasDescription': 0,
+        'HasCopyrightInfo': 0
     }
-    categorical = extract_categorical_features(url, html)
+
+    # Categorical features (uses either page or just URL text)
+    categorical = extract_categorical_features(url, html or '')
+
+    # TLD-based phishing likelihood
     tld_encoded = encode_tld(url)
+
+    # Combine all features
     features = {**categorical, **structural, **lexical, 'TLD_encoded': tld_encoded}
     feature_order = [
         'HasSocialNet', 'HasDescription', 'HasCopyrightInfo', 'HasSubmitButton',
