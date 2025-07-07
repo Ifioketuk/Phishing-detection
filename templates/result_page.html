@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PhishGuard - Result</title>
+  <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64," />
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin />
+  <link rel="stylesheet" as="style" onload="this.rel='stylesheet'"
+    href="https://fonts.googleapis.com/css2?display=swap&family=Noto+Sans:wght@400;500;700;900&family=Space+Grotesk:wght@400;500;700" />
+</head>
+<body class="bg-[#141b1f] font-['Space Grotesk','Noto Sans',sans-serif] text-white">
+  <div class="min-h-screen flex flex-col">
+    <header class="flex items-center justify-between border-b border-[#2a3841] px-10 py-3">
+      <div class="flex items-center gap-4">
+        <div class="size-4">
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd"
+              d="M24 18.4228L42 11.475V34.3663C42 34.7796 41.7457 35.1504 41.3601 35.2992L24 42V18.4228Z"
+              fill="currentColor"></path>
+            <path fill-rule="evenodd" clip-rule="evenodd"
+              d="M24 8.18819L33.4123 11.574L24 15.2071L14.5877 11.574L24 8.18819ZM9 15.8487L21 20.4805V37.6263L9 32.9945V15.8487ZM27 37.6263V20.4805L39 15.8487V32.9945L27 37.6263ZM25.354 2.29885C24.4788 1.98402 23.5212 1.98402 22.646 2.29885L4.98454 8.65208C3.7939 9.08038 3 10.2097 3 11.475V34.3663C3 36.0196 4.01719 37.5026 5.55962 38.098L22.9197 44.7987C23.6149 45.0671 24.3851 45.0671 25.0803 44.7987L42.4404 38.098C43.9828 37.5026 45 36.0196 45 34.3663V11.475C45 10.2097 44.2061 9.08038 43.0155 8.65208L25.354 2.29885Z"
+              fill="currentColor"></path>
+          </svg>
+        </div>
+        <h2 class="text-lg font-bold tracking-tight">PhishGuard</h2>
+      </div>
+    </header>
+
+    <div class="flex-1 px-10 py-8 max-w-5xl mx-auto">
+      <h1 class="text-[32px] font-bold mb-4">Phishing Detection Results</h1>
+
+      <!-- Score -->
+      <div class="mb-8">
+        <p class="text-lg mb-2 font-medium">Phishing Probability: {{ confidence }}%</p>
+        <div class="h-2 bg-[#3c505d] rounded">
+          <div class="h-2 bg-[#bfdaec] rounded" style="width: {{ confidence }}%;"></div>
+        </div>
+        <p class="text-sm mt-2 text-[#9bb1bf]">
+          {% if prediction_text == "Safe" %}
+          ✅ This website appears safe. Still, proceed with awareness.
+          {% else %}
+          ❌ This website has a high probability of being a phishing site. Exercise caution.
+          {% endif %}
+        </p>
+      </div>
+
+      <!-- Tabs -->
+      <div class="border-b border-[#3c505d] mb-4 flex gap-6">
+        <button class="tab-button text-white border-b-2 border-[#bfdaec] pb-2" data-tab="radar">Radar features Chart</button>
+        <button class="tab-button text-[#9bb1bf] border-b-2 border-transparent pb-2" data-tab="bar">Main Numerical features</button>
+        <button class="tab-button text-[#9bb1bf] border-b-2 border-transparent pb-2" data-tab="bool">Indicators</button>
+      </div>
+
+      <!-- Radar -->
+      <div id="tab-radar" class="tab-content">
+          <canvas id="radarChart" width="500" height="500"></canvas>
+      </div>
+
+      <!-- Bar -->
+      <div id="tab-bar" class="tab-content hidden">
+        <canvas id="barChart" width="300" height="200"></canvas>
+      </div>
+
+      <!-- Boolean Checkboxes -->
+      <div id="tab-bool" class="tab-content hidden">
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+          {% for key, value in boolean_features.items() %}
+          <label class="inline-flex items-center space-x-2">
+            <input type="checkbox" {% if value %}checked{% endif %} disabled class="form-checkbox h-5 w-5 text-[#bfdaec] rounded">
+            <span>{{ key }}</span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab switching -->
+    <script>
+      const buttons = document.querySelectorAll('.tab-button');
+      const tabs = document.querySelectorAll('.tab-content');
+      buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const target = 'tab-' + btn.dataset.tab;
+          buttons.forEach(b => b.classList.remove('text-white', 'border-[#bfdaec]'));
+          tabs.forEach(t => t.classList.add('hidden'));
+          btn.classList.add('text-white', 'border-[#bfdaec]');
+          document.getElementById(target).classList.remove('hidden');
+        });
+      });
+    </script>
+
+    <!-- Graphs -->
+    <script>
+      const radarData = {{ radar_features | tojson }};
+      const barData = {{ numerical_features | tojson }};
+
+      // Radar Chart
+      new Chart(document.getElementById("radarChart"), {
+        type: 'radar',
+        data: {
+          labels: Object.keys(radarData),
+          datasets: [{
+            label: 'Wavey Scores',
+            data: Object.values(radarData),
+            backgroundColor: 'rgba(191, 218, 236, 0.3)',
+            borderColor: '#bfdaec',
+            pointBackgroundColor: '#bfdaec',
+            borderWidth: 2,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            r: {
+              suggestedMin: 0,
+              suggestedMax: 1,
+              ticks: { color: '#243037' },
+              pointLabels: { color: 'white' },
+              grid: { color: '#3c505d' },
+              angleLines: { color: '#3c505d' }
+            }
+          },
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+
+      // Bar Chart
+      new Chart(document.getElementById("barChart").getContext("2d"), {
+        type: 'bar',
+        data: {
+          labels: Object.keys(barData),
+          datasets: [{
+            label: 'Feature Value',
+            data: Object.values(barData),
+            backgroundColor: '#9bb1bf',
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, max: 1.2 }
+          }
+        }
+      });
+    </script>
+  </div>
+</body>
+</html>
