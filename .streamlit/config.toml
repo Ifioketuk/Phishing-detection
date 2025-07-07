@@ -1,7 +1,0 @@
-[theme]
-base = "light"
-primaryColor = "#6A0DAD"               # Purple button and highlights
-backgroundColor = "white"              # Main background
-secondaryBackgroundColor = "lavender"  # Sidebar and widget background
-textColor = "#000000"                  # Black text
-font = "sans serif"                    # Clean modern font
